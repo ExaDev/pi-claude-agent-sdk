@@ -1,8 +1,7 @@
 /**
- * Typed provider configuration read from `exadev.claudeAgentSdk` in pi's
- * settings.json files.
+ * Typed provider configuration read from the top-level `claudeAgentSdk` block in
+ * pi's settings.json files.
  *
- * Lives under the `exadev.*` namespace.
  * Project settings (`<cwd>/.pi/settings.json`) override global settings
  * (`~/.pi/agent/settings.json`).
  *
@@ -86,7 +85,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Validate a raw `exadev.claudeAgentSdk` object into typed settings.
+ * Validate a raw `claudeAgentSdk` object into typed settings.
  * Returns `undefined` if the block is absent or not an object.
  */
 export function parseAgentSdkSettings(
@@ -121,7 +120,7 @@ export function parseAgentSdkSettings(
     return out;
 }
 
-/** Read the `exadev.claudeAgentSdk` block from a single settings.json file. */
+/** Read the `claudeAgentSdk` block from a single settings.json file. */
 export function readAgentSdkSettingsFromFile(
     filePath: string
 ): AgentSdkSettings | undefined {
@@ -139,9 +138,7 @@ export function readAgentSdkSettingsFromFile(
         return undefined;
     }
     if (!isRecord(parsed)) return undefined;
-    const exadev = parsed["exadev"];
-    if (!isRecord(exadev)) return undefined;
-    return parseAgentSdkSettings(exadev[NAMESPACE]);
+    return parseAgentSdkSettings(parsed[NAMESPACE]);
 }
 
 /**

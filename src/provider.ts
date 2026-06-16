@@ -1,7 +1,7 @@
 /**
  * Claude Agent SDK provider — the streaming core.
  *
- * Two history modes, selectable via `exadev.claudeAgentSdk.mode`:
+ * Two history modes, selectable via `claudeAgentSdk.mode`:
  *
  * - `"flatten"` (default): the whole transcript is sent each turn as one user
  *   message. The Agent SDK's prompt iterable only accepts `role: "user"`

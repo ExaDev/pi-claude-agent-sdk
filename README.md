@@ -45,21 +45,19 @@ bills the wrong pool.
 
 Select a model with `/model`, e.g. `claude-agent-sdk/claude-opus-4-7 (SDK)`.
 
-## Configuration (`exadev.claudeAgentSdk` in settings.json)
+## Configuration (`claudeAgentSdk` in settings.json)
 
-Settings live under `exadev.claudeAgentSdk` in `~/.pi/agent/settings.json` (global)
+Settings live under `claudeAgentSdk` in `~/.pi/agent/settings.json` (global)
 or `<cwd>/.pi/settings.json` (project; wins).
 
 ```json
 {
-  "exadev": {
-    "claudeAgentSdk": {
-      "authMode": "subscription",
-      "mode": "flatten",
-      "appendSystemPrompt": true,
-      "strictMcpConfig": true,
-      "settingSources": ["user", "project"]
-    }
+  "claudeAgentSdk": {
+    "authMode": "subscription",
+    "mode": "flatten",
+    "appendSystemPrompt": true,
+    "strictMcpConfig": true,
+    "settingSources": ["user", "project"]
   }
 }
 ```

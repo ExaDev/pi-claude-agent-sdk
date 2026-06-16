@@ -88,7 +88,7 @@ export class SubscriptionAuthError extends Error {
                         : `'${detectedSource}'`
                 }). ` +
                 `Unset ANTHROPIC_API_KEY and ensure you are logged in via Claude Code ` +
-                `(npx @anthropic-ai/claude-code), or set exadev.claudeAgentSdk.authMode ` +
+                `(npx @anthropic-ai/claude-code), or set claudeAgentSdk.authMode ` +
                 `to "apiKey" to opt into the extra-usage pool.`
         );
         this.name = "SubscriptionAuthError";

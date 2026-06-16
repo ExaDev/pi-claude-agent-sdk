@@ -69,18 +69,16 @@ void describe("parseAgentSdkSettings", () => {
 });
 
 void describe("readAgentSdkSettingsFromFile", () => {
-    void it("reads the exadev.claudeAgentSdk block", () => {
-        const dir = mkdtempSync(join(tmpdir(), "exadev-sdk-cfg-"));
+    void it("reads the claudeAgentSdk block", () => {
+        const dir = mkdtempSync(join(tmpdir(), "sdk-cfg-"));
         try {
             const path = join(dir, "settings.json");
             writeFileSync(
                 path,
                 JSON.stringify({
-                    exadev: {
-                        claudeAgentSdk: {
-                            authMode: "apiKey",
-                            strictMcpConfig: true,
-                        },
+                    claudeAgentSdk: {
+                        authMode: "apiKey",
+                        strictMcpConfig: true,
                     },
                     other: { keep: true },
                 })
@@ -101,7 +99,7 @@ void describe("readAgentSdkSettingsFromFile", () => {
     });
 
     void it("returns undefined for malformed JSON", () => {
-        const dir = mkdtempSync(join(tmpdir(), "exadev-sdk-cfg-"));
+        const dir = mkdtempSync(join(tmpdir(), "sdk-cfg-"));
         try {
             const path = join(dir, "settings.json");
             writeFileSync(path, "{ not json");
@@ -114,7 +112,7 @@ void describe("readAgentSdkSettingsFromFile", () => {
 
 void describe("loadAgentSdkSettings", () => {
     void it("returns defaults when no settings exist", () => {
-        const dir = mkdtempSync(join(tmpdir(), "exadev-sdk-cfg-"));
+        const dir = mkdtempSync(join(tmpdir(), "sdk-cfg-"));
         try {
             // A cwd with no .pi/settings.json and assume no global block.
             const settings = loadAgentSdkSettings(dir);
@@ -125,23 +123,21 @@ void describe("loadAgentSdkSettings", () => {
     });
 
     void it("project settings override global", () => {
-        const globalDir = mkdtempSync(join(tmpdir(), "exadev-sdk-cfg-g-"));
-        const projectDir = mkdtempSync(join(tmpdir(), "exadev-sdk-cfg-p-"));
+        const globalDir = mkdtempSync(join(tmpdir(), "sdk-cfg-g-"));
+        const projectDir = mkdtempSync(join(tmpdir(), "sdk-cfg-p-"));
         try {
             writeFileSync(
                 join(globalDir, "settings.json"),
                 JSON.stringify({
-                    exadev: { claudeAgentSdk: { authMode: "apiKey" } },
+                    claudeAgentSdk: { authMode: "apiKey" },
                 })
             );
             writeFileSync(
                 join(projectDir, "settings.json"),
                 JSON.stringify({
-                    exadev: {
-                        claudeAgentSdk: {
-                            authMode: "subscription",
-                            strictMcpConfig: true,
-                        },
+                    claudeAgentSdk: {
+                        authMode: "subscription",
+                        strictMcpConfig: true,
                     },
                 })
             );
