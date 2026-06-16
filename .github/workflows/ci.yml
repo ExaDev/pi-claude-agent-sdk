@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  audit:
+    name: Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6.0.5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm audit --audit-level high
+
+  check:
+    name: Check
+    needs: audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6.0.5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test
+
+  release:
+    name: Release
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history so semantic-release can analyse commits since the last tag.
+          fetch-depth: 0
+          # semantic-release configures its own git credentials from GITHUB_TOKEN.
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6.0.5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          # Do NOT set registry-url: it writes an .npmrc that overrides the
+          # token semantic-release uses for its git push.
+      - run: pnpm install --no-frozen-lockfile
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm release
