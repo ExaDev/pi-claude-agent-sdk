@@ -6,8 +6,16 @@
   "keywords": [
     "pi-package"
   ],
-  "author": "Joseph Mearman",
+  "author": "ExaDev",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ExaDev/pi-claude-agent-sdk.git"
+  },
+  "homepage": "https://github.com/ExaDev/pi-claude-agent-sdk",
+  "bugs": {
+    "url": "https://github.com/ExaDev/pi-claude-agent-sdk/issues"
+  },
   "pi": {
     "extensions": [
       "./src/index.ts"
