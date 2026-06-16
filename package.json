@@ -1,0 +1,47 @@
+{
+  "name": "pi-claude-agent-sdk",
+  "version": "0.1.0",
+  "description": "Pi extension: route Claude model calls through the Claude Agent SDK to draw from the Claude Pro/Max subscription rate-limit pool, with pi executing tools natively.",
+  "type": "module",
+  "keywords": [
+    "pi-package"
+  ],
+  "author": "Joseph Mearman",
+  "license": "MIT",
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test --test-force-exit 'src/__tests__/*.test.ts'",
+    "check": "tsc --noEmit",
+    "lint": "eslint --cache",
+    "lint:fix": "eslint --cache --fix"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.169"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "0.91.1",
+    "@earendil-works/pi-agent-core": "0.74.0",
+    "@earendil-works/pi-ai": "0.74.0",
+    "@earendil-works/pi-coding-agent": "0.74.0",
+    "@eslint/js": "10.0.1",
+    "@types/node": "25.6.2",
+    "eslint": "10.3.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-prettier": "5.5.5",
+    "prettier": "3.8.3",
+    "typebox": "^1.1.24",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.59.1"
+  },
+  "packageManager": "pnpm@10.33.1"
+}
