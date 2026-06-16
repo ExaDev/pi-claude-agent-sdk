@@ -1,6 +1,6 @@
 {
   "name": "pi-claude-agent-sdk",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Pi extension: route Claude model calls through the Claude Agent SDK to draw from the Claude Pro/Max subscription rate-limit pool, with pi executing tools natively.",
   "type": "module",
   "keywords": [
