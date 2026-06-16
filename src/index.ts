@@ -9,7 +9,7 @@
  *
  * The provider is registered at load (its models appear in /model); the
  * optional SDK is imported only when `streamSimple` runs. Two history modes are
- * selectable via `tau.claudeAgentSdk.mode` in settings.json: `flatten` (default,
+ * selectable via `exadev.claudeAgentSdk.mode` in settings.json: `flatten` (default,
  * robust) and `session` (SDK session resume, preserves real assistant turns).
  */
 

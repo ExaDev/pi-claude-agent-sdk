@@ -1,8 +1,8 @@
 /**
- * Typed provider configuration read from `tau.claudeAgentSdk` in pi's
+ * Typed provider configuration read from `exadev.claudeAgentSdk` in pi's
  * settings.json files.
  *
- * Lives under the established `tau.*` namespace (alongside `tau.features`).
+ * Lives under the `exadev.*` namespace.
  * Project settings (`<cwd>/.pi/settings.json`) override global settings
  * (`~/.pi/agent/settings.json`).
  *
@@ -40,7 +40,7 @@ export type AuthMode = "subscription" | "apiKey";
  *
  * - `"flatten"` (default): each turn sends the whole transcript flattened into
  *   one user message. Robust to pi's session tree and compaction; tool
- *   execution stays native to pi (tau's bash override, permissions).
+ *   execution stays native to pi (the host's bash override, permissions).
  * - `"session"`: the SDK keeps the real alternating transcript (thinking
  *   signatures, tool_use/tool_result pairs) and each turn we send only the new
  *   user/tool-result messages since the last turn. Avoids flattening assistant
@@ -86,7 +86,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Validate a raw `tau.claudeAgentSdk` object into typed settings.
+ * Validate a raw `exadev.claudeAgentSdk` object into typed settings.
  * Returns `undefined` if the block is absent or not an object.
  */
 export function parseAgentSdkSettings(
@@ -121,7 +121,7 @@ export function parseAgentSdkSettings(
     return out;
 }
 
-/** Read the `tau.claudeAgentSdk` block from a single settings.json file. */
+/** Read the `exadev.claudeAgentSdk` block from a single settings.json file. */
 export function readAgentSdkSettingsFromFile(
     filePath: string
 ): AgentSdkSettings | undefined {
@@ -139,9 +139,9 @@ export function readAgentSdkSettingsFromFile(
         return undefined;
     }
     if (!isRecord(parsed)) return undefined;
-    const tau = parsed["tau"];
-    if (!isRecord(tau)) return undefined;
-    return parseAgentSdkSettings(tau[NAMESPACE]);
+    const exadev = parsed["exadev"];
+    if (!isRecord(exadev)) return undefined;
+    return parseAgentSdkSettings(exadev[NAMESPACE]);
 }
 
 /**

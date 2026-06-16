@@ -12,7 +12,7 @@ tooling still apply.
 ## Install
 
 ```bash
-pi install github:<your-user>/pi-claude-agent-sdk
+pi install github:ExaDev/pi-claude-agent-sdk
 # or, from a local checkout:
 pi install path:~/Developer/pi-claude-agent-sdk
 ```
@@ -45,14 +45,14 @@ bills the wrong pool.
 
 Select a model with `/model`, e.g. `claude-agent-sdk/claude-opus-4-7 (SDK)`.
 
-## Configuration (`tau.claudeAgentSdk` in settings.json)
+## Configuration (`exadev.claudeAgentSdk` in settings.json)
 
-Settings live under `tau.claudeAgentSdk` in `~/.pi/agent/settings.json` (global)
+Settings live under `exadev.claudeAgentSdk` in `~/.pi/agent/settings.json` (global)
 or `<cwd>/.pi/settings.json` (project; wins).
 
 ```json
 {
-  "tau": {
+  "exadev": {
     "claudeAgentSdk": {
       "authMode": "subscription",
       "mode": "flatten",

@@ -60,7 +60,7 @@ export function resolveClaudeCodeExecutable(): string {
     } catch {
         throw new Error(
             "@anthropic-ai/claude-agent-sdk is not installed. Install it with:\n" +
-                "  cd ~/.pi/agent/extensions/tau && pnpm add -O @anthropic-ai/claude-agent-sdk"
+                "  cd ~/.pi/agent/extensions/pi-claude-agent-sdk && pnpm add -O @anthropic-ai/claude-agent-sdk"
         );
     }
 

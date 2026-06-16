@@ -1,7 +1,7 @@
 /**
  * Claude Agent SDK provider — the streaming core.
  *
- * Two history modes, selectable via `tau.claudeAgentSdk.mode`:
+ * Two history modes, selectable via `exadev.claudeAgentSdk.mode`:
  *
  * - `"flatten"` (default): the whole transcript is sent each turn as one user
  *   message. The Agent SDK's prompt iterable only accepts `role: "user"`
@@ -18,7 +18,7 @@
  *
  * Tool execution is deny-and-reroute in both modes: the SDK runs in
  * `permissionMode: "dontAsk"` with a `canUseTool` that always denies, so
- * `tool_use` blocks stream out for pi to execute natively (tau's bash override,
+ * `tool_use` blocks stream out for pi to execute natively (the host's bash override,
  * permissions, etc. all apply). Billing is decided by which loop makes the
  * completion call — the SDK subprocess — so subscription vs API-key is an auth
  * concern, not a tool concern. See {@link ./auth.ts}.

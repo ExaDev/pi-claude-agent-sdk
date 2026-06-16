@@ -2,7 +2,7 @@
  * Lazy loader for the optional `@anthropic-ai/claude-agent-sdk` dependency.
  *
  * The SDK is an optional dependency (it bundles a platform-specific native
- * binary). tau must load and run without it installed; only when the
+ * binary). The extension must load and run without it installed; only when the
  * `claude-agent-sdk` provider is actually selected do we import it. This mirrors
  * the existing patchright / cloakbrowser optional-dependency pattern.
  *
@@ -15,7 +15,7 @@ let cached: AgentSdkModule | undefined;
 
 const INSTALL_HINT =
     "@anthropic-ai/claude-agent-sdk is not installed. Install it with:\n" +
-    "  cd ~/.pi/agent/extensions/tau && pnpm add -O @anthropic-ai/claude-agent-sdk";
+    "  cd ~/.pi/agent/extensions/pi-claude-agent-sdk && pnpm add -O @anthropic-ai/claude-agent-sdk";
 
 /**
  * Dynamically import (and cache) the Agent SDK. Throws a clear, actionable
