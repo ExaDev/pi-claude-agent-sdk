@@ -1,5 +1,7 @@
 # pi-claude-agent-sdk
 
+[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)](https://github.com/ExaDev/pi-claude-agent-sdk) [![Release](https://img.shields.io/github/v/release/ExaDev/pi-claude-agent-sdk)](https://github.com/ExaDev/pi-claude-agent-sdk/releases/latest) [![CI](https://img.shields.io/github/actions/workflow/status/ExaDev/pi-claude-agent-sdk/ci.yml?branch=main)](https://github.com/ExaDev/pi-claude-agent-sdk/actions)
+
 A [pi](https://github.com/earendil-works/pi-mono) extension that registers a
 custom Claude provider routing model calls through the **Claude Agent SDK**, so
 they authenticate as first-party Claude Code and draw from the **Claude Pro/Max
