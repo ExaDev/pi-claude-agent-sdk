@@ -1,0 +1,5 @@
+# pi-coding-agent pins undici to an exact 8.x release with high-severity advisories, and the
+# patched pi-coding-agent releases are a major version with an incompatible API. Purely
+# transitive: remove once the pinned pi-coding-agent depends on undici >=8.12.2.
+overrides:
+  undici@>=8.0.0 <8.12.2: ^8.12.2
