@@ -114,9 +114,9 @@ export const MAX_LEGACY_THINKING_BUDGET = 31999;
 
 /**
  * Token budgets per pi thinking level for legacy (budget-based) models.
- * `high`/`xhigh` are clamped to the {@link MAX_LEGACY_THINKING_BUDGET} ceiling;
- * the lower levels use rounded step values. `xhigh` has no distinct budget on
- * legacy models (it is an adaptive-only tier) so it maps to the same ceiling.
+ * `high`/`xhigh`/`max` are clamped to the {@link MAX_LEGACY_THINKING_BUDGET} ceiling;
+ * the lower levels use rounded step values. `xhigh` and `max` have no distinct budget on
+ * legacy models (they are adaptive-only tiers) so they map to the same ceiling.
  */
 export const LEGACY_THINKING_BUDGETS: Readonly<Record<string, number>> = {
     minimal: 2048,
@@ -124,6 +124,7 @@ export const LEGACY_THINKING_BUDGETS: Readonly<Record<string, number>> = {
     medium: 16384,
     high: MAX_LEGACY_THINKING_BUDGET,
     xhigh: MAX_LEGACY_THINKING_BUDGET,
+    max: MAX_LEGACY_THINKING_BUDGET,
 };
 
 // ── Effort fallback for adaptive-thinking models ───────────────────────
@@ -141,6 +142,7 @@ export const DEFAULT_THINKING_LEVEL_TO_EFFORT: Readonly<
     medium: "medium",
     high: "high",
     xhigh: "xhigh",
+    max: "max",
 };
 
 /**

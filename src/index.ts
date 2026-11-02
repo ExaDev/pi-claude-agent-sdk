@@ -16,11 +16,11 @@
 import type {
     Api,
     AssistantMessageEventStream,
-    Context,
     Model,
     SimpleStreamOptions,
+    TranscriptContext,
 } from "@earendil-works/pi-ai";
-import { getModels } from "@earendil-works/pi-ai";
+import { getBuiltinModels } from "@earendil-works/pi-ai/providers/all";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
     PROVIDER_API,
@@ -40,7 +40,7 @@ const sdkSessions = new Map<
 /** Build the model list from pi-ai's anthropic catalogue, preserving cost and
  *  the thinking-level map. `api` is the recognised `anthropic-messages`. */
 function buildProviderModels() {
-    return getModels("anthropic").map((model) => ({
+    return getBuiltinModels("anthropic").map((model) => ({
         id: model.id,
         name: `${model.name} (SDK)`,
         api: PROVIDER_API,
@@ -58,7 +58,7 @@ function buildProviderModels() {
 export default function (pi: ExtensionAPI): void {
     const streamSimple = (
         model: Model<Api>,
-        context: Context,
+        context: TranscriptContext,
         options: SimpleStreamOptions | undefined
     ): AssistantMessageEventStream => {
         // Read per turn so config changes (authMode, mode) take effect without a
