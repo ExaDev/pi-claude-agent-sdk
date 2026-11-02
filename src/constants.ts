@@ -151,20 +151,3 @@ export const DEFAULT_THINKING_LEVEL_TO_EFFORT: Readonly<
  * traffic distinguishable from live SDK sessions in logs.
  */
 export const REPLAY_SESSION_ID = "pi-replay";
-
-/**
- * Model-id fragments that identify adaptive-thinking models (driven by
- * `effort`, not a token budget). Mirrors pi-ai's own detection in its
- * anthropic provider so the two agree on which path a model takes.
- */
-export const ADAPTIVE_THINKING_MODEL_FRAGMENTS: readonly string[] = [
-    "opus-4-6",
-    "opus-4.6",
-    "opus-4-7",
-    "opus-4.7",
-    "opus-4-8",
-    "opus-4.8",
-    "sonnet-4-6",
-    "sonnet-4.6",
-    "fable-5",
-];

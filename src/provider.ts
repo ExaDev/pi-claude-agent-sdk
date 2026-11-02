@@ -75,7 +75,6 @@ import type {
 import type { BetaRawMessageStreamEvent } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 
 import {
-    ADAPTIVE_THINKING_MODEL_FRAGMENTS,
     DEFAULT_THINKING_LEVEL_TO_EFFORT,
     LEGACY_THINKING_BUDGETS,
     MAX_LEGACY_THINKING_BUDGET,
@@ -420,10 +419,17 @@ export function buildIncrementalPrompt(
 
 // ── Thinking configuration ────────────────────────────────────────────
 
-/** True for adaptive-thinking models driven by `effort` (not a token budget). */
-function supportsAdaptiveThinking(modelId: string): boolean {
-    return ADAPTIVE_THINKING_MODEL_FRAGMENTS.some((fragment) =>
-        modelId.includes(fragment)
+/**
+ * True for adaptive-thinking models driven by `effort` (not a token budget). Reads the same
+ * `compat.forceAdaptiveThinking` flag pi-ai's own anthropic provider reads, which the registered
+ * models carry over from pi-ai's catalogue, so the two agree on which path a model takes.
+ */
+export function supportsAdaptiveThinking(model: Model<Api>): boolean {
+    const compat = model.compat;
+    return (
+        compat !== undefined &&
+        "forceAdaptiveThinking" in compat &&
+        compat.forceAdaptiveThinking === true
     );
 }
 
@@ -458,7 +464,7 @@ type LegacyBudgetLevel = keyof NonNullable<
  * models use `maxThinkingTokens`, clamped to Anthropic's `[MIN, MAX]` envelope
  * and to one below the model's output cap (the API requires budget < max_tokens).
  */
-function resolveThinkingOptions(
+export function resolveThinkingOptions(
     model: Model<Api>,
     reasoning: ThinkingLevel | undefined,
     thinkingBudgets: SimpleStreamOptions["thinkingBudgets"]
@@ -466,7 +472,7 @@ function resolveThinkingOptions(
     if (!reasoning) {
         return { thinking: { type: "disabled" } };
     }
-    if (supportsAdaptiveThinking(model.id)) {
+    if (supportsAdaptiveThinking(model)) {
         return {
             thinking: { type: "adaptive", display: "summarized" },
             effort: resolveEffort(model, reasoning),
