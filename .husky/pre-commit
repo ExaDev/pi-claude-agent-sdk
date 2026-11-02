@@ -1,2 +1,2 @@
-node node_modules/.bin/tsc --noEmit
-node node_modules/.bin/lint-staged
+pnpm exec tsc --noEmit
+pnpm exec lint-staged
