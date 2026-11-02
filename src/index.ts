@@ -37,9 +37,12 @@ const sdkSessions = new Map<
     { sdkSessionId: string | undefined; sentCount: number; head: string }
 >();
 
-/** Build the model list from pi-ai's anthropic catalogue, preserving cost and
- *  the thinking-level map. `api` is the recognised `anthropic-messages`. */
-function buildProviderModels() {
+/** Build the model list from pi-ai's anthropic catalogue, preserving cost, the
+ *  thinking-level map and the adaptive-thinking flag. `api` is the recognised
+ *  `anthropic-messages`. Other compat settings are left out: they configure
+ *  pi-ai's HTTP transport (fallback models, cache headers), which this provider
+ *  replaces. */
+export function buildProviderModels() {
     return getBuiltinModels("anthropic").map((model) => ({
         id: model.id,
         name: `${model.name} (SDK)`,
@@ -47,6 +50,9 @@ function buildProviderModels() {
         reasoning: model.reasoning,
         ...(model.thinkingLevelMap
             ? { thinkingLevelMap: model.thinkingLevelMap }
+            : {}),
+        ...(model.compat?.forceAdaptiveThinking === true
+            ? { compat: { forceAdaptiveThinking: true } }
             : {}),
         input: model.input,
         cost: model.cost,
