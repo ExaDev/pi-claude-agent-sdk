@@ -16,7 +16,7 @@
  * context, limit}`, pi `find` takes `{pattern, path, limit}`.
  */
 
-import type { Context, Tool } from "@earendil-works/pi-ai";
+import type { Tool } from "@earendil-works/pi-ai";
 import {
     BUILTIN_PI_TOOL_NAMES,
     DEFAULT_SDK_TOOLS,
@@ -232,15 +232,15 @@ export interface ResolvedSdkTools {
 }
 
 /**
- * Partition `context.tools` into Claude Code built-ins and custom tools.
+ * Partition pi's active tools into Claude Code built-ins and custom tools.
  *
  * Built-ins (read/write/edit/bash/grep/find) are listed by their Claude Code
  * names so the model names them correctly and the real schemas reach it.
  * Everything else becomes a custom MCP tool, schema-carried but always denied
  * at execution (pi runs them natively).
  */
-export function resolveSdkTools(context: Context): ResolvedSdkTools {
-    if (!context.tools || context.tools.length === 0) {
+export function resolveSdkTools(tools: readonly Tool[]): ResolvedSdkTools {
+    if (tools.length === 0) {
         return {
             sdkTools: [...DEFAULT_SDK_TOOLS],
             customTools: [],
@@ -254,7 +254,7 @@ export function resolveSdkTools(context: Context): ResolvedSdkTools {
     const customToolNameToSdk = new Map<string, string>();
     const customToolNameToPi = new Map<string, string>();
 
-    for (const tool of context.tools) {
+    for (const tool of tools) {
         const normalised = tool.name.toLowerCase();
         if (BUILTIN_PI_TOOL_NAMES.has(normalised)) {
             const sdkName = PI_TO_SDK_TOOL_NAME[normalised];

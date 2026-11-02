@@ -34,19 +34,24 @@ import type {
     Api,
     AssistantMessage,
     AssistantMessageEventStream,
-    Context,
     ImageContent,
+    JsonObject,
+    JsonValue,
     Message,
     Model,
     SimpleStreamOptions,
+    SystemMessage,
     TextContent,
     ThinkingLevel,
     ToolCall,
+    TranscriptContext,
     Usage,
 } from "@earendil-works/pi-ai";
 import {
     calculateCost,
     createAssistantMessageEventStream,
+    getCurrentSystemPrompt,
+    getCurrentTools,
     parseStreamingJson,
 } from "@earendil-works/pi-ai";
 
@@ -99,8 +104,70 @@ export { PROVIDER_API, PROVIDER_DISPLAY_NAME, PROVIDER_ID };
 
 // ── Small shared helpers ──────────────────────────────────────────────
 
+/**
+ * A transcript message that is part of the conversation itself. pi-ai 1.x carries the system prompt and tool declarations as `system` messages in the transcript; the Agent SDK takes those as query options instead, so the replayed history holds only the other roles.
+ */
+export type ConversationMessage = Exclude<Message, SystemMessage>;
+
+function isConversationMessage(
+    message: Message
+): message is ConversationMessage {
+    return message.role !== "system";
+}
+
+/**
+ * The conversation part of a transcript, with every system message removed. Their prompt text and tool changes reach the SDK through {@link getCurrentSystemPrompt} and {@link getCurrentTools}, which replay them in order.
+ */
+export function conversationMessages(
+    context: TranscriptContext
+): ConversationMessage[] {
+    return context.messages.filter(isConversationMessage);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Convert a tool-input value to pi-ai's JSON types.
+ *
+ * @throws TypeError on a value JSON cannot represent (a function, a symbol, a non-finite number): tool input arrives as JSON, so such a value means a mapping bug upstream.
+ */
+function toJsonValue(value: unknown): JsonValue {
+    if (
+        value === null ||
+        typeof value === "boolean" ||
+        typeof value === "string"
+    ) {
+        return value;
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return value.map(toJsonValue);
+    }
+    if (isRecord(value)) {
+        return toJsonObject(value);
+    }
+    throw new TypeError(
+        `Tool input holds a non-JSON value of type ${typeof value}`
+    );
+}
+
+/**
+ * Convert a tool-input record to a pi-ai `JsonObject`. Properties whose value is `undefined` are dropped, as JSON serialisation drops them; the argument mappers in `tools.ts` produce such properties for optional arguments the model did not send.
+ *
+ * @throws TypeError as {@link toJsonValue}.
+ */
+function toJsonObject(record: Record<string, unknown>): JsonObject {
+    const out: JsonObject = {};
+    for (const [key, entry] of Object.entries(record)) {
+        if (entry !== undefined) {
+            out[key] = toJsonValue(entry);
+        }
+    }
+    return out;
 }
 
 /**
@@ -110,7 +177,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * the head even when the message count stays the same — so a mismatch means the
  * SDK session is stale and must be re-seeded rather than resumed.
  */
-export function headFingerprint(messages: readonly Message[]): string {
+export function headFingerprint(
+    messages: readonly ConversationMessage[]
+): string {
     const head = messages[0];
     if (head === undefined) return "";
     const sample =
@@ -211,11 +280,11 @@ function toImageBlockParam(image: ImageContent): ImageBlockParam {
  * not supported by the SDK's API.
  */
 export function buildHistoryIterable(
-    context: Context,
+    messages: readonly ConversationMessage[],
     customToolNameToSdk: ReadonlyMap<string, string>
 ): AsyncIterable<SDKUserMessage> {
     async function* generate(): AsyncGenerator<SDKUserMessage> {
-        yield buildPromptMessage(context, customToolNameToSdk);
+        yield buildPromptMessage(messages, customToolNameToSdk);
     }
     return generate();
 }
@@ -228,11 +297,9 @@ const PROMPT_BASE = {
 };
 
 function buildPromptMessage(
-    context: Context,
+    messages: readonly ConversationMessage[],
     customToolNameToSdk: ReadonlyMap<string, string>
 ): SDKUserMessage {
-    const messages = context.messages;
-
     // Fast path: a lone user turn — pass its content through verbatim.
     if (messages.length === 1 && messages[0].role === "user") {
         return {
@@ -312,7 +379,7 @@ function safeStringify(value: unknown): string {
  * alternating transcript instead of a flattened blob.
  */
 export function buildIncrementalPrompt(
-    messages: Message[],
+    messages: readonly ConversationMessage[],
     sentCount: number
 ): AsyncIterable<SDKUserMessage> {
     async function* generate(): AsyncGenerator<SDKUserMessage> {
@@ -379,8 +446,10 @@ interface ThinkingOptions {
     maxThinkingTokens?: number;
 }
 
-/** ThinkingBudgets has no `xhigh` key; map it to `high` for legacy models. */
-type LegacyBudgetLevel = "minimal" | "low" | "medium" | "high";
+/** ThinkingBudgets has no `xhigh` or `max` key; both map to `high` for legacy models. */
+type LegacyBudgetLevel = keyof NonNullable<
+    SimpleStreamOptions["thinkingBudgets"]
+>;
 
 /**
  * Derive the SDK thinking options for a model + reasoning level.
@@ -404,7 +473,7 @@ function resolveThinkingOptions(
         };
     }
     const budgetLevel: LegacyBudgetLevel =
-        reasoning === "xhigh" ? "high" : reasoning;
+        reasoning === "xhigh" || reasoning === "max" ? "high" : reasoning;
     const custom = thinkingBudgets?.[budgetLevel];
     const levelBudget =
         typeof custom === "number" && Number.isFinite(custom) && custom > 0
@@ -612,7 +681,7 @@ function handleBlockStart(
             type: "toolCall",
             id: block.id,
             name: mapSdkToolNameToPi(block.name, customToolNameToPi),
-            arguments: isRecord(block.input) ? block.input : {},
+            arguments: isRecord(block.input) ? toJsonObject(block.input) : {},
         });
         record(scratch, event.index, output.content.length - 1);
         emitStart(stream, output, "toolcall");
@@ -697,7 +766,7 @@ function handleBlockStop(
         if (entry.partialJson.trim().length > 0) {
             try {
                 const parsed: unknown = JSON.parse(entry.partialJson);
-                block.arguments = isRecord(parsed) ? parsed : {};
+                block.arguments = isRecord(parsed) ? toJsonObject(parsed) : {};
             } catch (error) {
                 throw new Error(
                     `Malformed tool-call JSON at content_block_stop: ${
@@ -707,9 +776,11 @@ function handleBlockStop(
                 );
             }
         }
-        block.arguments = mapSdkArgsToPi(
-            mapSdkToolNameToPi(block.name, customToolNameToPi),
-            block.arguments
+        block.arguments = toJsonObject(
+            mapSdkArgsToPi(
+                mapSdkToolNameToPi(block.name, customToolNameToPi),
+                block.arguments
+            )
         );
         const toolCall: ToolCall = {
             type: "toolCall",
@@ -832,7 +903,7 @@ interface StreamDeps {
  */
 export function streamClaudeAgentSdk(
     model: Model<Api>,
-    context: Context,
+    context: TranscriptContext,
     options: SimpleStreamOptions | undefined,
     deps: StreamDeps
 ): AssistantMessageEventStream {
@@ -844,7 +915,7 @@ export function streamClaudeAgentSdk(
 async function runAgentSdkQuery(
     stream: AssistantStream,
     model: Model<Api>,
-    context: Context,
+    context: TranscriptContext,
     options: SimpleStreamOptions | undefined,
     deps: StreamDeps
 ): Promise<void> {
@@ -877,7 +948,9 @@ async function runAgentSdkQuery(
     }
 
     try {
-        const resolved = resolveSdkTools(context);
+        const messages = conversationMessages(context);
+        const systemPrompt = getCurrentSystemPrompt(context.messages);
+        const resolved = resolveSdkTools(getCurrentTools(context.messages));
         const mcpServers = buildCustomToolServers(sdk, resolved);
         const thinking = resolveThinkingOptions(
             model,
@@ -899,32 +972,29 @@ async function runAgentSdkQuery(
         let prompt: AsyncIterable<SDKUserMessage>;
         // Head fingerprint of the current transcript; reused for the stale-
         // resume guard and stored on the cursor for next turn.
-        const head = headFingerprint(context.messages);
+        const head = headFingerprint(messages);
         if (sessionMode) {
             const cursor = deps.sdkSessions.get(piSessionId);
             if (
                 cursor !== undefined &&
                 cursor.sdkSessionId !== undefined &&
-                cursor.sentCount <= context.messages.length &&
+                cursor.sentCount <= messages.length &&
                 cursor.head === head
             ) {
                 resumeId = cursor.sdkSessionId;
-                cursorSentCount = context.messages.length;
-                prompt = buildIncrementalPrompt(
-                    context.messages,
-                    cursor.sentCount
-                );
+                cursorSentCount = messages.length;
+                prompt = buildIncrementalPrompt(messages, cursor.sentCount);
             } else {
                 deps.sdkSessions.delete(piSessionId);
-                cursorSentCount = context.messages.length;
+                cursorSentCount = messages.length;
                 prompt = buildHistoryIterable(
-                    context,
+                    messages,
                     resolved.customToolNameToSdk
                 );
             }
         } else {
             prompt = buildHistoryIterable(
-                context,
+                messages,
                 resolved.customToolNameToSdk
             );
         }
@@ -949,8 +1019,8 @@ async function runAgentSdkQuery(
             systemPrompt: {
                 type: "preset",
                 preset: "claude_code",
-                ...(deps.settings.appendSystemPrompt && context.systemPrompt
-                    ? { append: context.systemPrompt }
+                ...(deps.settings.appendSystemPrompt && systemPrompt
+                    ? { append: systemPrompt }
                     : {}),
             },
             ...(deps.settings.settingSources

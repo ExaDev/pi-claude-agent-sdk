@@ -13,6 +13,14 @@ import {
     resolveSdkTools,
 } from "../tools.ts";
 import type { Context } from "@earendil-works/pi-ai";
+import { getCurrentTools, normalizeContext } from "@earendil-works/pi-ai";
+
+/** Resolve tools the way the provider does: from the transcript's replayed tool state. */
+function resolveFromContext(
+    context: Context
+): ReturnType<typeof resolveSdkTools> {
+    return resolveSdkTools(getCurrentTools(normalizeContext(context).messages));
+}
 
 void describe("mapSdkToolNameToPi", () => {
     void it("maps Claude Code built-ins to pi names", () => {
@@ -132,7 +140,7 @@ void describe("mapPiArgsToSdk", () => {
 
 void describe("resolveSdkTools", () => {
     void it("returns default built-ins when no tools are active", () => {
-        const result = resolveSdkTools({ messages: [] });
+        const result = resolveFromContext({ messages: [] });
         assert.ok(result.sdkTools.includes("Read"));
         assert.ok(result.sdkTools.includes("Bash"));
         assert.equal(result.customTools.length, 0);
@@ -152,7 +160,7 @@ void describe("resolveSdkTools", () => {
                 },
             ],
         };
-        const result = resolveSdkTools(ctx);
+        const result = resolveFromContext(ctx);
         assert.deepEqual(result.sdkTools.sort(), ["Bash", "Read"]);
         assert.equal(result.customTools.length, 2);
         assert.equal(

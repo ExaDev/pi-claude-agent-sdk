@@ -13,15 +13,18 @@ import assert from "node:assert/strict";
 import {
     buildHistoryIterable,
     buildIncrementalPrompt,
+    conversationMessages,
     headFingerprint,
+    type ConversationMessage,
 } from "../provider.ts";
 import type {
     AssistantMessage,
     Context,
-    Message,
+    SystemMessage,
     ToolResultMessage,
     UserMessage,
 } from "@earendil-works/pi-ai";
+import { normalizeContext } from "@earendil-works/pi-ai";
 
 type Block = {
     type: string;
@@ -31,8 +34,11 @@ type Block = {
     is_error?: boolean;
 };
 
+/** Flatten `context` the way the provider does: normalise it to a transcript, then drop its
+ *  system messages. */
 async function content(context: Context): Promise<Block[]> {
-    for await (const msg of buildHistoryIterable(context, new Map())) {
+    const messages = conversationMessages(normalizeContext(context));
+    for await (const msg of buildHistoryIterable(messages, new Map())) {
         return msg.message.content as Block[];
     }
     throw new Error("no message yielded");
@@ -102,6 +108,40 @@ void describe("buildHistoryIterable (flattened single user message)", () => {
         assert.equal(blocks[0]?.text, "hello");
     });
 
+    void it("keeps the lone-user fast path when the transcript leads with a system prompt", async () => {
+        const blocks = await content({
+            systemPrompt: "be terse",
+            messages: [user("hello")],
+        });
+        assert.deepEqual(
+            blocks.map((b) => b.type),
+            ["text"]
+        );
+        assert.equal(blocks[0]?.text, "hello");
+    });
+
+    void it("leaves system prompt text, leading or mid-conversation, out of the history", async () => {
+        const update: SystemMessage = {
+            role: "system",
+            content: "MID-CONVERSATION INSTRUCTION",
+            timestamp: 0,
+        };
+        const blocks = await content({
+            systemPrompt: "LEADING PROMPT",
+            messages: [
+                user("first"),
+                assistant([{ type: "text", text: "reply" }]),
+                update,
+                user("second"),
+            ],
+        });
+        const text = joined(blocks);
+        assert.match(text, /USER:/);
+        assert.match(text, /second/);
+        assert.doesNotMatch(text, /LEADING PROMPT/);
+        assert.doesNotMatch(text, /MID-CONVERSATION INSTRUCTION/);
+    });
+
     void it("yields a single empty user message when there is no history", async () => {
         const blocks = await content({ messages: [] });
         assert.deepEqual(
@@ -166,7 +206,7 @@ void describe("buildHistoryIterable (flattened single user message)", () => {
 });
 
 async function incremental(
-    messages: Message[],
+    messages: ConversationMessage[],
     sentCount: number
 ): Promise<Block[]> {
     for await (const msg of buildIncrementalPrompt(messages, sentCount)) {
